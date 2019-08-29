@@ -1,0 +1,76 @@
+version: "3"
+
+services:
+  namenode:
+    image: woe1997/hadoop-2.7.7-namenode:1.0
+    container_name: namenode
+    ports:
+      - 50070:50070
+    volumes:
+      - hadoop_namenode_test:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+
+  datanode:
+    image: woe1997/hadoop-2.7.7-datanode:1.0
+    container_name: datanode
+    volumes:
+      - hadoop_datanode_test:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:50070"
+    env_file:
+      - ./hadoop.env
+
+  hive-server:
+    image: woe1997/hadoop-2.7.7-hive-2.3.6:1.0
+    env_file:
+      - ./hadoop.env
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    ports:
+      - "10000:10000"
+  hive-metastore:
+    image: woe1997/hadoop-2.7.7-hive:1.0
+    env_file:
+      - ./hadoop.env
+    command: /opt/hive/bin/hive --service metastore
+    environment:
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 hive-metastore-postgresql:5432"
+    ports:
+      - "9083:9083"
+  hive-metastore-postgresql:
+    image: woe1997/postgres-9.4-hive-2.3:1.0
+  presto-coordinator:
+    image: shawnzhu/prestodb:0.181
+    ports:
+      - "8080:8080"
+
+  hbase:
+    image: woe1997/phoenix-5.0.0-hbase-2.0.6-standlone:1.0
+    container_name: hbase
+    volumes:
+      - hbase_data_test:/hbase-data
+      - hbase_zookeeper_data_test:/zookeeper-data
+    ports:
+      - 16000:16000
+      - 16010:16010
+      - 16020:16020
+      - 16030:16030
+      - 2888:2888
+      - 3888:3888
+      - 2181:2181
+      - 8765:8765
+    environment:
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50075"
+    env_file:
+      - ./hbase-standalone.env
+
+
+volumes:
+  hadoop_namenode_test:
+  hadoop_datanode_test:
+  hbase_data_test:
+  hbase_zookeeper_data_test:
