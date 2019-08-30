@@ -33,7 +33,7 @@ services:
     ports:
       - "10000:10000"
   hive-metastore:
-    image: woe1997/hadoop-2.7.7-hive:1.0
+    image: woe1997/hadoop-2.7.7-hive-2.3.6:1.0
     env_file:
       - ./hadoop.env
     command: /opt/hive/bin/hive --service metastore
