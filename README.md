@@ -2,11 +2,48 @@
 This is a Hadoop eco-family bucket containing the use of hdfs hive hbase phoiex base on https://github.com/big-data-europe/docker-hadoop .  The debugging environment of hbase hive phoenix hdfs can be easily owned by docker
 
 
-
-### start up  
+### Operating system support
+#### Ubuntu
 ```shell
   docker-compose up -d
 ```
+
+#### mac
+Because the container is not built directly on the host
+So it should base on openvpn to proxy 。
+Thank for https://github.com/wojas/docker-mac-network
+you can set /help/run.sh and run the docker-compose in the project
+```shell
+#!/bin/sh
+
+dest=${dest:-docker.ovpn}
+
+if [ ! -f "/local/$dest" ]; then
+    echo "*** REGENERATING ALL CONFIGS ***"
+    set -ex
+    #rm -rf /etc/openvpn/*
+    ovpn_genconfig -u tcp://localhost
+    sed -i 's|^push|#push|' /etc/openvpn/openvpn.conf
+    echo localhost | ovpn_initpki nopass
+    easyrsa build-client-full host nopass
+    ovpn_getclient host | sed '
+    	s|localhost 1194|localhost 13194|;
+	s|redirect-gateway.*|route 172.30.0.0 255.255.0.0|;
+    ' > "/local/$dest"
+fi
+
+# Workaround for https://github.com/wojas/docker-mac-network/issues/6
+/sbin/iptables -I FORWARD 1 -i tun+ -j ACCEPT
+
+exec ovpn_run
+```
+
+if you install success you can ping the ip inside in container 
+then
+```sql
+docker-compose up -d 
+```
+
 
 ### ENV
 ```
@@ -29,7 +66,6 @@ vim /etc/hosts
 172.30.0.7 hbase
 172.30.0.8 hue
 ```
-
 
 ### use
 ```.env
