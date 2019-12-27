@@ -1,4 +1,4 @@
-version: "3"
+version: "3.7"
 
 services:
   namenode:
@@ -12,6 +12,9 @@ services:
       - CLUSTER_NAME=test
     env_file:
       - ./hadoop.env
+    networks:
+      extnetwork:
+        ipv4_address: 172.30.0.2
 
   datanode:
     image: woe1997/hadoop-2.7.7-datanode:1.0
@@ -22,7 +25,9 @@ services:
       SERVICE_PRECONDITION: "namenode:50070"
     env_file:
       - ./hadoop.env
-
+    networks:
+      extnetwork:
+        ipv4_address: 172.30.0.3
   hive-server:
     container_name: "hive-server"
     image: woe1997/hadoop-2.7.7-hive-2.3.6:1.0
@@ -33,6 +38,10 @@ services:
       SERVICE_PRECONDITION: "hive-metastore:9083"
     ports:
       - "10000:10000"
+    networks:
+      extnetwork:
+        ipv4_address: 172.30.0.4
+
   hive-metastore:
     container_name: "hive-metastore"
     image: woe1997/hadoop-2.7.7-hive-2.3.6:1.0
@@ -41,15 +50,21 @@ services:
     command: /opt/hive/bin/hive --service metastore
     environment:
       SERVICE_PRECONDITION: "namenode:50070 datanode:50075 hive-metastore-postgresql:5432"
-    ports:
-      - "9083:9083"
+    networks:
+      extnetwork:
+        ipv4_address: 172.30.0.5
+#    ports:
+#      - "9083:9083"
   hive-metastore-postgresql:
     container_name: "hive-metastore-postgresql"
     image: woe1997/postgres-9.4-hive-2.3.6:1.0
-  presto-coordinator:
-    image: shawnzhu/prestodb:0.181
-    ports:
-      - "8080:8080"
+#  presto-coordinator:
+#    image: shawnzhu/prestodb:0.181
+#    ports:
+#      - "8080:8080"
+    networks:
+      extnetwork:
+        ipv4_address: 172.30.0.6
 
   hbase:
     image: woe1997/phoenix-5.0.0-hbase-2.0.6-standlone:1.0
@@ -57,23 +72,26 @@ services:
     volumes:
       - hbase_data_test:/hbase-data
       - hbase_zookeeper_data_test:/zookeeper-data
-    ports:
-      - 16000:16000
-      - 16010:16010
-      - 16020:16020
-      - 16030:16030
-      - 2888:2888
-      - 3888:3888
-      - 2181:2181
-      - 8765:8765
+#    ports:
+#      - 16000:16000
+#      - 16010:16010
+#      - 16020:16020
+#      - 16030:16030
+#      - 2888:2888
+#      - 3888:3888
+#      - 2181:2181
+#      - 8765:8765
     environment:
       SERVICE_PRECONDITION: "namenode:50070 datanode:50075"
     env_file:
       - ./hbase-standalone.env
+    networks:
+      extnetwork:
+        ipv4_address: 172.30.0.7
 
   hue:
     image: woe1997/hue-4.5:1.0
-    container_name: hue
+    container_name: "hue"
     environment:
       ENGINE: "postgresql_psycopg2"
       HOST: "hive-metastore-postgresql"
@@ -87,10 +105,18 @@ services:
       HIVE_METASTORE_PORT: "9083"
     ports:
       - 8888:8888
-
+    networks:
+      extnetwork:
+        ipv4_address: 172.30.0.8
     depends_on:
       - hive-metastore-postgresql
 
+networks:
+  extnetwork:
+    ipam:
+     driver: default
+     config:
+       - subnet: 172.30.0.0/24
 volumes:
   hadoop_namenode_test:
   hadoop_datanode_test:

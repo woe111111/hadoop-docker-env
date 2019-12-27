@@ -17,6 +17,20 @@ HBASE 2.0.6
 PHOENIX 5.0.0
 ```
 
+### 添加地址解析
+```
+vim /etc/hosts
+
+172.30.0.2 namenode
+172.30.0.3 datenode
+172.30.0.4 hive-server
+172.30.0.5 hive-metastore
+172.30.0.6 hive-metastore-postgresql
+172.30.0.7 hbase
+172.30.0.8 hue
+```
+
+
 ### use
 ```.env
 web_hdfs http://namenode:50070
@@ -26,3 +40,5 @@ hive_server_jdb http://hive-server:10000
 hbase_regionserver_info http://hbase:1603065
 phoenix_query_server http://hbase:8765
 ```
+
+
