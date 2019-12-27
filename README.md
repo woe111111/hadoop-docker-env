@@ -77,4 +77,54 @@ hbase_regionserver_info http://hbase:1603065
 phoenix_query_server http://hbase:8765
 ```
 
+### Pyspark Demo
+```python
+
+from __future__ import print_function
+
+from pyspark import SparkContext, SparkConf
+from pyspark.sql import SparkSession
+from pyspark.sql import Row
+conf = SparkConf().setMaster("local[4]")
+
+
+## 配置hive 的 matestore地址 让spark.sql可以访问到测试集群的hive
+conf.set("hive.metastore.uris", "thrift://hive-metastore:9083")
+sc = SparkContext(conf=conf)
+sc.setLogLevel("error")
+spark = SparkSession.builder.appName("python spark examp").enableHiveSupport().getOrCreate()
+
+
+def create():
+    df = spark.sql("""SHOW TABLES""")
+    df.show()
+    spark.sql("""CREATE TABLE IF NOT EXISTS helloword (name STRING, age INT)""")
+
+def insert():
+    df = sc.parallelize([Row(name="h", age=20)]).toDF()
+    df.printSchema()
+    df.show()
+    df.registerTempTable("temp")
+    spark.sql("INSERT INTO TABLE helloword SELECT name,age FROM temp")
+    spark.catalog.dropTempView("temp")
+
+
+def get():
+    df = spark.sql("select * from helloword")
+    # print("num of recoder is %s" % df.count())
+    df.show()
+
+
+if __name__ == "__main__":
+
+    df = spark.sql("SHOW DATABASES")
+
+    create()
+    insert()
+    get()
+    df.write.mode("overwrite").orc("hdfs://namenode:9000/test")
+
+    spark.stop()
+
+```
 
