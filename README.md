@@ -44,6 +44,18 @@ then
 docker-compose up -d 
 ```
 
+#### change conf
+```conf
+vim docer-for-mac.ovpn
+
+comp-lzo yes   # add
+
+```
+```conf
+vim ／config／openvpn.conf
+
+comp-lzo yes  # change
+```
 
 ### ENV
 ```
